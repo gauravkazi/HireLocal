@@ -1,6 +1,6 @@
 import axios from 'axios';
 const API = axios.create({
-    baseURL:'http://localhost:5002/api',
+    baseURL:'https://hirelocal-backend.onrender.com/api',
 });
 API.interceptors.request.use((config) =>{
     const token = localStorage.getItem('token');
