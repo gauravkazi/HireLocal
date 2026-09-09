@@ -38,7 +38,7 @@ function BrowseServices() {
       <h1 className="text-xl font-semibold text-black dark:text-white mb-1">Browse services</h1>
       <p className="text-sm text-black dark:text-white mb-4">Find a provider for your next project</p>
 
-      <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+      <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 mb-6">
         <input
           type="text"
           placeholder="Search services"
