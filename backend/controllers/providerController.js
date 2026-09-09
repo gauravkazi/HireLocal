@@ -1,5 +1,6 @@
 const ProviderProfile = require('../models/ProviderProfile');
 
+// create provider profile
 const createProviderProfile = async(req, res)=>{
     try{
         const{bio, skills, experience, pricing, portfolio, profilePicture} = req.body;
@@ -39,6 +40,11 @@ const updateProviderProfile = async(req,res)=>{
         profile.pricing = pricing?? profile.pricing;
         profile.portfolio = portfolio ?? profile.portfolio;
         profile.profilePicture = profilePicture ?? profile.profilePicture;
+
+        // if a new file was upload use its cloudinary url
+        if(req.file){
+            profile.profilePicture = req.file.path;
+        }
 
         const updateProfile = await profile.save();
         res.status(200).json(updateProfile);

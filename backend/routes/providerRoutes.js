@@ -9,6 +9,7 @@ const {
 
 const {protect} = require('../middleware/authMiddleware');
 const {ristrictTo} = require('../middleware/roleMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 // provider create own profile
 
@@ -16,7 +17,7 @@ router.post('/profile', protect, ristrictTo('provider'), createProviderProfile);
 
 // provider updates their profile
 
-router.post('/profile', protect, ristrictTo('provider'), updateProviderProfile);
+router.put('/profile', protect, ristrictTo('provider'), upload.single('profilePicture'), updateProviderProfile);
 
 // provider get their profile
 

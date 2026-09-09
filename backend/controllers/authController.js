@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const generateToken = require('../utils/generateToken');
+const logActivity = require('../utils/logActivity');
 
 // register new user
 const registerUser = async (req,res) =>{
@@ -30,6 +31,8 @@ const registerUser = async (req,res) =>{
             password:hashedPassword,
             role: role || 'customer',
         });
+        await logActivity(user._id, 'User registered', `Role: ${user.role}`);
+
         res.status(201).json({
             _id: user._id,
             name: user.name,

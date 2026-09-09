@@ -24,7 +24,7 @@ const serviceSchema = new mongoose.Schema(
                 'Social Media Management',
                 'Content Writing',
                 'Digital Marketing',
-                'other',
+                'Other',
             ],
         },
         price:{

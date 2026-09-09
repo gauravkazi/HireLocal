@@ -1,7 +1,8 @@
 const ServiceRequest = require('../models/ServiceRequest');
 const Service = require('../models/Service');
+const logActivity = require('../utils/logActivity');
 
-// @desc    Customer submits a service request
+//    Customer submits a service request
 const createRequest = async (req, res) => {
   try {
     const { serviceId, requirements, budget, deadline } = req.body;
@@ -30,7 +31,7 @@ const createRequest = async (req, res) => {
   }
 };
 
-// @desc    Get all requests made by the logged-in customer
+//    Get all requests made by the logged-in customer
 const getMyRequest = async (req, res) => {
   try {
     const requests = await ServiceRequest.find({ customer: req.user._id })
@@ -42,7 +43,7 @@ const getMyRequest = async (req, res) => {
   }
 };
 
-// @desc    Get all requests received by the logged-in provider
+//    Get all requests received by the logged-in provider
 const getReceivedRequest = async (req, res) => {
   try {
     const requests = await ServiceRequest.find({ provider: req.user._id })
@@ -54,7 +55,7 @@ const getReceivedRequest = async (req, res) => {
   }
 };
 
-// @desc    Get a single request by ID
+//   Get a single request by ID
 const getRequestById = async (req, res) => {
   try {
     const request = await ServiceRequest.findById(req.params.id)
@@ -79,7 +80,7 @@ const getRequestById = async (req, res) => {
   }
 };
 
-// @desc    Update request status (project tracking)
+//    Update request status (project tracking)
 const updateRequestStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -100,6 +101,8 @@ const updateRequestStatus = async (req, res) => {
 
     request.status = status;
     const updatedRequest = await request.save();
+
+    await logActivity(req.user._id, 'Request status updated', `Status: ${status}`);
 
     res.status(200).json(updatedRequest);
   } catch (error) {

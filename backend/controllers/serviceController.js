@@ -1,4 +1,5 @@
 const Service = require('../models/Service');
+const logActivity = require('../utils/logActivity');
 
 // create a new service listing 
 
@@ -16,6 +17,8 @@ const createService = async(req, res) =>{
             price,
             deliveryTime,
         });
+
+        await logActivity(req.user._id, 'Service created', service.title);
         res.status(201).json(service);
 
     }catch(error){
