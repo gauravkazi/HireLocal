@@ -131,6 +131,23 @@ See [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) for full endpoint details.
 
 See [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) for collection structures and relationships.
 
+
+## Backend Design Decisions
+
+A few notes on architecture choices made while building the API:
+
+- **Denormalized `provider` reference on `ServiceRequest`.** Rather than deriving the provider through the linked `Service` document on every read, `provider` is stored directly on each request at creation time. This keeps "my received requests" and "provider dashboard" queries a single `find()` call instead of a nested lookup, at the cost of a small amount of duplicated data.
+
+- **Role-based access via composable middleware.** `protect` verifies the JWT and attaches the user to `req.user`; `restrictTo(...roles)` is a separate, reusable middleware that checks `req.user.role` against an allowed list. Routes compose both (`protect, restrictTo('provider'), handler`), keeping authorization logic out of controllers entirely.
+
+- **Average rating is recalculated on write, not on read.** When a review is created, the provider's `averageRating` is recomputed from all their reviews and saved to their `ProviderProfile` immediately. This trades a slightly heavier write for fast, index-free reads anywhere the rating is displayed (browse listings, profile pages).
+
+- **Status transitions are validated server-side against a fixed enum**, both in the Mongoose schema and again in the controller before the update is applied — so an invalid status can't be persisted even if a request bypasses the frontend's dropdown.
+
+- **File uploads go directly to Cloudinary via Multer's storage engine**, never touching the server's local disk. This keeps the API stateless and safe to run on ephemeral hosting (Render's free tier restarts the filesystem on redeploy).
+
+- **Ownership checks are explicit, not implicit.** Update/delete on a `Service` or a status change on a `ServiceRequest` compares the resource's owner ID against `req.user._id` inside the controller, rather than relying solely on role checks — so a provider can only modify their own listings, not any provider's.
+
 ## Author
 
 Gaurav Thapa — ZI Core Internship (September Batch), Task FSWD-1
