@@ -6,8 +6,4 @@ const { protect } = require('../middleware/authMiddleware');
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 
-router.get('/profile', protect, (req,res) =>{
-    res.json({message:'you are logged in!', user :req.user});
-});
-
 module.exports = router;
