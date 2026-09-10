@@ -1,4 +1,3 @@
-
 # HireLocal API Documentation
 
 HireLocal is a multi-vendor service marketplace API. This document describes every available endpoint, grouped by feature.
@@ -36,6 +35,11 @@ Successful responses return the requested resource (object or array) with an app
 { "message": "Description of what went wrong" }
 ```
 
+## Email Notifications
+
+Two endpoints in this API trigger a transactional email as a side effect, in addition to their normal response: **Create a request** (4.1) and **Update request status** (4.5). Emails are sent via the [Resend](https://resend.com) API from `utils/sendEmail.js`, and are marked inline below wherever they apply.
+
+> **Note:** emails are currently sent from Resend's shared sandbox domain (`onboarding@resend.dev`), since verifying a custom sending domain requires owning a domain name. The API call itself completes successfully and is logged as sent on Resend's dashboard in every case, but final inbox delivery can be inconsistent with some providers (notably Gmail) due to spam filtering of shared sender domains. This is an email-deliverability characteristic of the shared domain, not an application bug — in production this would be resolved by verifying a dedicated sending domain.
 
 ## 1. Authentication
 
@@ -138,6 +142,7 @@ Successful responses return the requested resource (object or array) with an app
 
 **Success response — 200:** the logged-in provider's profile, with `user` populated (`name`, `email`, `role`).
 
+
 ### 2.4 Get a provider's public profile
 `GET /providers/:id`
 **Access:** Public
@@ -239,6 +244,9 @@ Accepts any subset of: `title`, `description`, `category`, `price`, `deliveryTim
 
 **Success response — 201:** the created request, `status` defaults to `Pending`. The `provider` field is filled in automatically from the service.
 
+> 📧 **Email notification:** sends an email to the provider (`"New Service Request — HireLocal"`), including the service title, requirements, budget, and deadline. See the Email Notifications note near the top of this document regarding deliverability.
+
+
 ### 4.2 Get my requests
 `GET /requests/my-requests`
 **Access:** Private — `customer`
@@ -278,11 +286,11 @@ Accepts any subset of: `title`, `description`, `category`, `price`, `deliveryTim
 
 **Success response — 200:** the updated request.
 
+> 📧 **Email notification:** sends an email to the customer (`"Your Request Status Has Changed — HireLocal"`), including the new status. See the Email Notifications note near the top of this document regarding deliverability.
+
 **Error responses:**
 - `400` — invalid status value
 - `403` — not the assigned provider
-
-
 
 ## 5. Reviews & Ratings
 
@@ -316,15 +324,11 @@ Accepts any subset of: `title`, `description`, `category`, `price`, `deliveryTim
 - `400` — request not yet delivered, or already reviewed
 - `403` — not the customer on this request
 
-
-
 ### 5.2 Get a provider's reviews
 `GET /reviews/provider/:providerId`
 **Access:** Public
 
 **Success response — 200:** array of reviews for that provider, with `customer` name populated.
-
-
 
 ## 6. Dashboards
 
@@ -342,8 +346,6 @@ Accepts any subset of: `title`, `description`, `category`, `price`, `deliveryTim
   "completedProjects": [ "..." ]
 }
 ```
-
-
 
 ### 6.2 Provider dashboard
 `GET /dashboard/provider`
@@ -406,28 +408,28 @@ Accepts any subset of: `title`, `description`, `category`, `price`, `deliveryTim
 
 ## Quick Reference Table
 
-| Method | Endpoint | Access |
-|---|---|---|
-| POST | `/auth/register` | Public |
-| POST | `/auth/login` | Public |
-| POST | `/providers/profile` | Provider |
-| PUT | `/providers/profile` | Provider |
-| GET | `/providers/profile` | Provider |
-| GET | `/providers/:id` | Public |
-| POST | `/services` | Provider |
-| GET | `/services` | Public |
-| GET | `/services/:id` | Public |
-| GET | `/services/my-services` | Provider |
-| PUT | `/services/:id` | Provider (owner) |
-| DELETE | `/services/:id` | Provider (owner) |
-| POST | `/requests` | Customer |
-| GET | `/requests/my-requests` | Customer |
-| GET | `/requests/received-requests` | Provider |
-| GET | `/requests/:id` | Customer/Provider (involved) |
-| PUT | `/requests/:id/status` | Provider (assigned) |
-| POST | `/reviews` | Customer |
-| GET | `/reviews/provider/:providerId` | Public |
-| GET | `/dashboard/customer` | Customer |
-| GET | `/dashboard/provider` | Provider |
-| GET | `/dashboard/admin` | Admin |
-| GET | `/dashboard/admin/logs` | Admin |
+| Method | Endpoint | Access | Notes |
+|---|---|---|---|
+| POST | `/auth/register` | Public | |
+| POST | `/auth/login` | Public | |
+| POST | `/providers/profile` | Provider | |
+| PUT | `/providers/profile` | Provider | |
+| GET | `/providers/profile` | Provider | |
+| GET | `/providers/:id` | Public | |
+| POST | `/services` | Provider | |
+| GET | `/services` | Public | |
+| GET | `/services/:id` | Public | |
+| GET | `/services/my-services` | Provider | |
+| PUT | `/services/:id` | Provider (owner) | |
+| DELETE | `/services/:id` | Provider (owner) | |
+| POST | `/requests` | Customer | 📧 emails provider |
+| GET | `/requests/my-requests` | Customer | |
+| GET | `/requests/received-requests` | Provider | |
+| GET | `/requests/:id` | Customer/Provider (involved) | |
+| PUT | `/requests/:id/status` | Provider (assigned) | 📧 emails customer |
+| POST | `/reviews` | Customer | |
+| GET | `/reviews/provider/:providerId` | Public | |
+| GET | `/dashboard/customer` | Customer | |
+| GET | `/dashboard/provider` | Provider | |
+| GET | `/dashboard/admin` | Admin | |
+| GET | `/dashboard/admin/logs` | Admin | |

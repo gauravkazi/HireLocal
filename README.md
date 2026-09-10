@@ -48,6 +48,11 @@ The platform simulates real-world marketplaces like Fiverr and Upwork, tailored 
 - Dark Mode (persisted across sessions)
 - Activity Logs (tracks key user actions, viewable by admin)
 - Responsive design (desktop, tablet, mobile)
+- Email Notification: 
+### Email Notifications
+Triggers automatically on two events: a new service request being submitted (notifies the provider) and a request status change (notifies the customer). Implemented via the Resend API (`utils/sendEmail.js`), called from `requestController.js`.
+
+**Known limitation:** emails are sent from Resend's shared sandbox domain (`onboarding@resend.dev`), since verifying a custom sending domain requires owning a domain name. As a result, delivery to some inboxes (particularly Gmail) can be inconsistent — the API consistently returns a successful response and the request is logged as sent on Resend's dashboard, but final inbox delivery depends on the receiving provider's spam filtering of shared sender domains. In production, this would be resolved by verifying a dedicated sending domain.
 
 ## Tech Stack
 

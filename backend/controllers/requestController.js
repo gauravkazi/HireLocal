@@ -1,8 +1,10 @@
 const ServiceRequest = require('../models/ServiceRequest');
 const Service = require('../models/Service');
 const logActivity = require('../utils/logActivity');
+const sendEmail = require('../utils/sendEmail');
+const User = require('../models/User');
 
-//    Customer submits a service request
+// Customer submits a service request
 const createRequest = async (req, res) => {
   try {
     const { serviceId, requirements, budget, deadline } = req.body;
@@ -25,13 +27,22 @@ const createRequest = async (req, res) => {
       deadline,
     });
 
+    const provider = await User.findById(service.provider);
+    if (provider) {
+      await sendEmail(
+      provider.email,
+      'New Service Request — HireLocal',
+      `You received a new request for "${service.title}".\n\nRequirements: ${requirements}\nBudget: NPR ${budget}\nDeadline: ${deadline}\n\nLog in to HireLocal to respond.`
+      );
+    }
+
     res.status(201).json(request);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-//    Get all requests made by the logged-in customer
+// Get all requests made by the logged-in customer
 const getMyRequest = async (req, res) => {
   try {
     const requests = await ServiceRequest.find({ customer: req.user._id })
@@ -55,7 +66,7 @@ const getReceivedRequest = async (req, res) => {
   }
 };
 
-//   Get a single request by ID
+// Get a single request by ID
 const getRequestById = async (req, res) => {
   try {
     const request = await ServiceRequest.findById(req.params.id)
@@ -80,7 +91,7 @@ const getRequestById = async (req, res) => {
   }
 };
 
-//    Update request status (project tracking)
+// Update request status (project tracking)
 const updateRequestStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -101,6 +112,16 @@ const updateRequestStatus = async (req, res) => {
 
     request.status = status;
     const updatedRequest = await request.save();
+
+
+    const customer = await User.findById(request.customer);
+    if (customer) {
+      await sendEmail(
+        customer.email,
+        'Your Request Status Has Changed — HireLocal',
+        `Your request status has been updated to: ${status}.\n\nLog in to HireLocal to view details.`
+      );
+    }
 
     await logActivity(req.user._id, 'Request status updated', `Status: ${status}`);
 
