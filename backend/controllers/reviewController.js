@@ -45,7 +45,7 @@ try{
     const avgRating = allReviews.reduce((sum, r) => sum + r .rating, 0) / allReviews.length;
     
     await ProviderProfile.findOneAndUpdate(
-            {user:'request.provider'},
+            {user:request.provider},
             {averageRating: avgRating.toFixed(1)}  
     );
     res.status(201).json(review);   
