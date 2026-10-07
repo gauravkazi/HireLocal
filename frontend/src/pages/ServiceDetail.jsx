@@ -7,15 +7,38 @@ function ServiceDetail() {
   const { id } = useParams();
   const { user } = useAuth();
   const [service, setService] = useState(null);
+  const [providerProfile, setProviderProfile] = useState(null);
   const [requirements, setRequirements] = useState('');
   const [budget, setBudget] = useState('');
   const [deadline, setDeadline] = useState('');
   const [message, setMessage] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
 
   useEffect(() => {
     const fetchService = async () => {
       const res = await API.get(`/services/${id}`);
       setService(res.data);
+
+      if (res.data.provider?._id) {
+        try {
+          const reviewRes = await API.get(`/reviews/provider/${res.data.provider._id}`);
+          setReviews(reviewRes.data);
+        } catch (err) {
+          console.error('Failed to load reviews:', err);
+        } finally {
+          setReviewsLoading(false);
+        }
+
+        try {
+          const profileRes = await API.get(`/providers/user/${res.data.provider._id}`);
+          setProviderProfile(profileRes.data);
+        } catch (err) {
+          console.error('Failed to load provider profile:', err);
+        }
+      } else {
+        setReviewsLoading(false);
+      }
     };
     fetchService();
   }, [id]);
@@ -41,11 +64,27 @@ function ServiceDetail() {
 
   if (!service) return <p className="text-black dark:text-white p-6">Loading...</p>;
 
+  const averageRating =
+    reviews.length > 0
+      ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
+      : null;
+
   return (
     <div className="min-h-screen bg-white dark:bg-black p-6 max-w-2xl mx-auto">
       <div className="border border-black dark:border-white rounded-lg p-6 mb-6">
-        <h1 className="text-xl font-semibold text-black dark:text-white mb-2">{service.title}</h1>
-        <p className="text-sm text-black dark:text-white mb-1">By {service.provider?.name}</p>
+        <div className="flex items-center gap-3 mb-2">
+          {providerProfile?.profilePicture && (
+            <img
+              src={providerProfile.profilePicture}
+              alt={service.provider?.name}
+              className="w-10 h-10 rounded-full object-cover border border-black dark:border-white"
+            />
+          )}
+          <div>
+            <h1 className="text-xl font-semibold text-black dark:text-white">{service.title}</h1>
+            <p className="text-sm text-black dark:text-white">By {service.provider?.name}</p>
+          </div>
+        </div>
         <p className="text-sm text-black dark:text-white mb-3">{service.category}</p>
         <p className="text-sm text-black dark:text-white mb-1">NPR {service.price}</p>
         <p className="text-sm text-black dark:text-white mb-4">Delivery: {service.deliveryTime}</p>
@@ -53,7 +92,7 @@ function ServiceDetail() {
       </div>
 
       {user && user.role === 'customer' && (
-        <form onSubmit={handleRequest} className="border border-black dark:border-white rounded-lg p-6">
+        <form onSubmit={handleRequest} className="border border-black dark:border-white rounded-lg p-6 mb-6">
           <h2 className="text-lg font-semibold text-black dark:text-white mb-3">Request this service</h2>
 
           {message && (
@@ -99,8 +138,41 @@ function ServiceDetail() {
       )}
 
       {!user && (
-        <p className="text-sm text-black dark:text-white">Log in as a customer to request this service.</p>
+        <p className="text-sm text-black dark:text-white mb-6">Log in as a customer to request this service.</p>
       )}
+
+      <div className="border border-black dark:border-white rounded-lg p-6">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-black dark:text-white">Reviews</h2>
+          {averageRating && (
+            <span className="text-sm text-black dark:text-white">
+              {averageRating} / 5 · {reviews.length} review{reviews.length !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
+
+        {reviewsLoading ? (
+          <p className="text-sm text-black dark:text-white">Loading reviews...</p>
+        ) : reviews.length === 0 ? (
+          <p className="text-sm text-black dark:text-white">No reviews yet.</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {reviews.map((review) => (
+              <div key={review._id} className="border-t border-black dark:border-white pt-3 first:border-t-0 first:pt-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-black dark:text-white">
+                    {review.customer?.name || 'Anonymous'}
+                  </span>
+                  <span className="text-sm text-black dark:text-white">{review.rating} / 5</span>
+                </div>
+                {review.feedback && (
+                  <p className="text-sm text-black dark:text-white">{review.feedback}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

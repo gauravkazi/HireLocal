@@ -4,7 +4,7 @@ const {
     createProviderProfile,
     updateProviderProfile,
     getMyProviderProfile,
-    getProviderById,
+    getProviderByUserId,
 } = require('../controllers/providerController');
 
 const {protect} = require('../middleware/authMiddleware');
@@ -25,6 +25,6 @@ router.get('/profile', protect, ristrictTo('provider'), getMyProviderProfile);
 
 //provider public profile by id
 
-router.get('/:id', getProviderById);
+router.get('/user/:userId', getProviderByUserId);
 
 module.exports = router;

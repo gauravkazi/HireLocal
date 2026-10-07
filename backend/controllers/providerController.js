@@ -72,9 +72,9 @@ const getMyProviderProfile = async(req,res)=>{
 
 // public provider profile by id 
 
-const getProviderById = async (req,res)=>{
+const getProviderByUserId = async (req,res)=>{
     try{
-        const profile = await ProviderProfile.findById(req.params.id).populate(
+        const profile = await ProviderProfile.findOne({user: req.params.userId}).populate(
             'user',
             'name email role'
         );
@@ -91,5 +91,5 @@ module.exports ={
     createProviderProfile,
     updateProviderProfile,
     getMyProviderProfile,
-    getProviderById,
+    getProviderByUserId,
 };
